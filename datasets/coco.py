@@ -11,9 +11,8 @@ import torch.utils.data
 import torchvision
 from pycocotools import mask as coco_mask
 
-import datasets.transforms as T
-
-import albumentations as A
+#import datasets.transforms as T
+import torchvision.transforms as T
 
 class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, ann_file, transforms, return_masks):
@@ -125,6 +124,12 @@ def make_coco_transforms(image_set):
     if image_set == 'train':
         return T.Compose([
             T.RandomHorizontalFlip(),
+            T.RandomVerticalFlip(),
+            T.RandomApply(
+            [
+                T.ColorJitter((1,5), (1,5), (1,5), (-0.1,0.1)),
+                T.GaussianBlur(3,(1,20)),
+            ])
             #T.RandomSelect(
                 
             #),
