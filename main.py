@@ -121,7 +121,13 @@ def main(args):
     model, criterion, postprocessors = build_model(args)
     model.to(device)
 
+    ## for finetuning
+    checkpoint = torch.load("detr-r50-e632da11.pth", map_location='cpu')
+    del checkpoint["model"]["class_embed.weight"]
+    del checkpoint["model"]["class_embed.bias"]
+    torch.save(checkpoint,"detr-r50_no-class-head.pth")
     model_without_ddp = model
+    model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
     if args.distributed:
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
