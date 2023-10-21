@@ -129,10 +129,7 @@ def make_coco_transforms(image_set):
             [
                 T.ColorJitter((1,5), (1,5), (1,5), (-0.1,0.1)),
                 T.GaussianBlur(3,(1,20)),
-            ])
-            #T.RandomSelect(
-                
-            #),
+            ]),
             normalize,
         ])
 
