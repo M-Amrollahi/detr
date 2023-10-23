@@ -28,19 +28,27 @@ class CocoDetection(torchvision.datasets.CocoDetection):
     def __getitem__(self, idx):
         img, target = super(CocoDetection, self).__getitem__(idx)
         image_id = self.ids[idx]
-
+        
+        #print("target:",target)
         target = {'image_id': image_id, 'annotations': target}
         img, target = self.prepare(img, target)
-        print("target:",target)
-        print("---",image_id)
+        #print(image_id)
+        #print("target:",target)
+        #print("---",image_id)
+        #print(target.keys())
         if self._transforms is not None:
             tmp_boxes = target["boxes"].numpy()
             tmp_labels = target["labels"].numpy()
             
-            img, target = self._transforms(
-                image=np.array(img),
-                bboxes=np.hstack((tmp_boxes, tmp_labels[ : , np.newaxis])))
-            img = img / 255.0
+            _res = self._transforms(
+                image = np.array(img),
+                bboxes = np.hstack((tmp_boxes, tmp_labels[ : , np.newaxis])))
+            #print(_res["bboxes"])
+            img = _res["image"]
+            target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4]
+            target["labels"] = torch.tensor(_res["bboxes"], dtype=torch.int64)[:,4]
+            #print(target)
+            #img = img / 255.0
         return img, target
 
 
