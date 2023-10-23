@@ -9,12 +9,15 @@ from pathlib import Path
 import torch
 import torch.utils.data
 import torchvision
-from numpy import array
+import numpy as np
 from pycocotools import mask as coco_mask
 
-#import datasets.transforms as T
 import albumentations as A
 import torchvision.transforms as T
+from albumentations.pytorch.transforms import ToTensorV2
+from albumentations.augmentations.transforms import Normalize
+
+#import datasets.transforms as T
 
 class CocoDetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, ann_file, transforms, return_masks):
@@ -32,7 +35,12 @@ class CocoDetection(torchvision.datasets.CocoDetection):
         print("---",image_id)
         if self._transforms is not None:
             tmp_boxes = target["boxes"].numpy()
-            img, target = self._transforms(image=array(img), bboxes=tmp_boxes,class_label=target["labels"].numpy())
+            tmp_labels = target["labels"].numpy()
+            
+            img, target = self._transforms(
+                image=np.array(img),
+                bboxes=np.hstack((tmp_boxes, tmp_labels[ : , np.newaxis])))
+            img = img / 255.0
         return img, target
 
 
@@ -120,51 +128,58 @@ class ConvertCocoPolysToMask(object):
 
 def make_coco_transforms(image_set):
     
-    normalize = T.Compose([
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+    #normalize = T.Compose([
+    #    T.ToTensor(),
+    #    T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    #])
 
-    #scales = [480, 512, 544, 576, 608, 640, 672, 704, 736, 768, 800]
-
-
-
-    trans = A.Compose([
-        A.VerticalFlip(p=.5),
-        A.HorizontalFlip(p=.5),
-        A.Sharpen(alpha=(.3,.3),p=.5),
-        A.RandomBrightnessContrast(brightness_limit=0.15,contrast_limit=0.15,p=.5),
-        A.RandomGamma(gamma_limit=(80, 120),p=.5),
-        A.GaussNoise(var_limit=(1,30),  mean=0, p=.5),
-        A.CLAHE(p=.5),
-        A.ToGray(p=1.0),
-        A.Resize(height=640, width=640),
-        normalize
-    ])
+    trans_val = A.Compose(
+        [
+            A.Resize(height=640, width=640),
+            #Normalize(),
+            ToTensorV2(),
+        ])
     
-    trans = A.Compose(trans, bbox_params=A.BboxParams(format='coco',label_fields=["class_label"]))
+    trans_train = A.Compose(
+        [
+            A.VerticalFlip(p=.5),
+            A.HorizontalFlip(p=.5),
+            A.Sharpen(alpha=(.3,.3),p=.5),
+            A.RandomBrightnessContrast(brightness_limit=0.15,contrast_limit=0.15,p=.5),
+            A.RandomGamma(gamma_limit=(80, 120),p=.5),
+            A.GaussNoise(var_limit=(1,30),  mean=0, p=.5),
+            A.CLAHE(p=.5),
+            #A.ToGray(p=1.0),
+
+            trans_val
+        ],
+            bbox_params=A.BboxParams(format='coco')
+        )
+
+    
+    #trans = A.Compose(trans, bbox_params=A.BboxParams(format='coco',label_fields=["class_label"]))
 
 
     if image_set == 'train':
-        return trans
+        return trans_train
         
-        return T.Compose([
-            T.RandomHorizontalFlip(),
+        #return T.Compose([
+        #    T.RandomHorizontalFlip(),
             #T.RandomVerticalFlip(),
             #T.RandomApply(
             #[
             #    T.ColorJitter((1,5), (1,5), (1,5), (-0.1,0.1)),
             #    T.GaussianBlur(3,(1,20)),
             #]),
-            normalize,
-        ])
+        #    normalize,
+        #])
 
     if image_set == 'val':
-        return normalize
-        return T.Compose([
-            #T.RandomResize([800], max_size=1333),
-            normalize,
-        ])
+        return trans_val
+        #return T.Compose([
+        #    #T.RandomResize([800], max_size=1333),
+        #    normalize,
+        #])
     
     raise ValueError(f'unknown {image_set}')
 
