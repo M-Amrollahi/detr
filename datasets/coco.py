@@ -161,7 +161,7 @@ def make_coco_transforms(image_set):
 
             trans_val
         ],
-            bbox_params=A.BboxParams(format='coco')
+            bbox_params=A.BboxParams(format='pascal_voc')
         )
 
     
