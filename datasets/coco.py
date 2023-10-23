@@ -44,7 +44,7 @@ class CocoDetection(torchvision.datasets.CocoDetection):
                 image = np.array(img),
                 bboxes = np.hstack((tmp_boxes, tmp_labels[ : , np.newaxis])))
             #print(_res["bboxes"])
-            img = _res["image"]
+            img = _res["image"].float()
             target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4]
             target["labels"] = torch.tensor(_res["bboxes"], dtype=torch.int64)[:,4]
             #print(target)
