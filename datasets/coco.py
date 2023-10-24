@@ -29,13 +29,9 @@ class CocoDetection(torchvision.datasets.CocoDetection):
         img, target = super(CocoDetection, self).__getitem__(idx)
         image_id = self.ids[idx]
         
-        #print("target:",target)
         target = {'image_id': image_id, 'annotations': target}
         img, target = self.prepare(img, target)
-        #print(image_id)
-        #print("target:",target)
-        #print("---",image_id)
-        #print(target.keys())
+        
         if self._transforms is not None:
             tmp_boxes = target["boxes"].numpy()
             tmp_labels = target["labels"].numpy()
@@ -43,12 +39,13 @@ class CocoDetection(torchvision.datasets.CocoDetection):
             _res = self._transforms(
                 image = np.array(img),
                 bboxes = np.hstack((tmp_boxes, tmp_labels[ : , np.newaxis])))
-            #print(_res["bboxes"])
+            
             img = _res["image"].float()
-            target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4]
+            target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4] / 640.0
             target["labels"] = torch.tensor(_res["bboxes"], dtype=torch.int64)[:,4]
-            #print(target)
-            #img = img / 255.0
+            target["boxes"][:,:2] += target["boxes"][:,2:] / 2
+            
+            img = img / 255.0
         return img, target
 
 
@@ -135,11 +132,6 @@ class ConvertCocoPolysToMask(object):
 
 
 def make_coco_transforms(image_set):
-    
-    #normalize = T.Compose([
-    #    T.ToTensor(),
-    #    T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    #])
 
     trans_val = A.Compose(
         [
@@ -164,30 +156,11 @@ def make_coco_transforms(image_set):
             bbox_params=A.BboxParams(format='pascal_voc')
         )
 
-    
-    #trans = A.Compose(trans, bbox_params=A.BboxParams(format='coco',label_fields=["class_label"]))
-
-
     if image_set == 'train':
         return trans_train
-        
-        #return T.Compose([
-        #    T.RandomHorizontalFlip(),
-            #T.RandomVerticalFlip(),
-            #T.RandomApply(
-            #[
-            #    T.ColorJitter((1,5), (1,5), (1,5), (-0.1,0.1)),
-            #    T.GaussianBlur(3,(1,20)),
-            #]),
-        #    normalize,
-        #])
 
     if image_set == 'val':
         return trans_val
-        #return T.Compose([
-        #    #T.RandomResize([800], max_size=1333),
-        #    normalize,
-        #])
     
     raise ValueError(f'unknown {image_set}')
 
