@@ -122,10 +122,9 @@ def main(args):
     model.to(device)
 
     ## for finetuning
-    checkpoint = torch.load("detr-r50-e632da11.pth", map_location='cpu')
-    del checkpoint["model"]["class_embed.weight"]
-    del checkpoint["model"]["class_embed.bias"]
-    torch.save(checkpoint,"detr-r50_no-class-head.pth")
+    checkpoint = torch.load("detr-r50_no-class-head.pth", map_location='cpu')
+
+    
     model_without_ddp = model
     model_without_ddp.load_state_dict(checkpoint['model'], strict=False)
     if args.distributed:
