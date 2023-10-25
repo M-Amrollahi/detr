@@ -43,7 +43,7 @@ class CocoDetection(torchvision.datasets.CocoDetection):
             img = _res["image"].float()
             target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4] / 640.0
             target["labels"] = torch.tensor(_res["bboxes"], dtype=torch.int64)[:,4]
-            target["boxes"][:,:2] += target["boxes"][:,2:] / 2
+            #target["boxes"][:,:2] += target["boxes"][:,2:] / 2
             
             img = img / 255.0
         return img, target
@@ -83,9 +83,9 @@ class ConvertCocoPolysToMask(object):
         boxes = [obj["bbox"] for obj in anno]
         # guard against no boxes via resizing
         boxes = torch.as_tensor(boxes, dtype=torch.float32).reshape(-1, 4)
-        boxes[:, 2:] += boxes[:, :2]
-        boxes[:, 0::2].clamp_(min=0, max=w)
-        boxes[:, 1::2].clamp_(min=0, max=h)
+        #boxes[:, 2:] += boxes[:, :2]
+        boxes[:, 2].clamp_(min=0, max=w)
+        boxes[:, 3].clamp_(min=0, max=h)
 
         classes = [obj["category_id"] for obj in anno]
         classes = torch.tensor(classes, dtype=torch.int64)
@@ -102,7 +102,7 @@ class ConvertCocoPolysToMask(object):
             if num_keypoints:
                 keypoints = keypoints.view(num_keypoints, -1, 3)
 
-        keep = (boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
+        keep = (boxes[:,0] >= 0)#(boxes[:, 3] > boxes[:, 1]) & (boxes[:, 2] > boxes[:, 0])
         boxes = boxes[keep]
         classes = classes[keep]
         if self.return_masks:
@@ -153,7 +153,7 @@ def make_coco_transforms(image_set):
 
             trans_val
         ],
-            bbox_params=A.BboxParams(format='pascal_voc')
+            bbox_params=A.BboxParams(format='coco')
         )
 
     if image_set == 'train':
