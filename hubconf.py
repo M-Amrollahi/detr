@@ -10,26 +10,25 @@ from models.transformer import Transformer
 dependencies = ["torch", "torchvision"]
 
 
-def _make_detr(backbone_name: str, dilation=False, num_classes=91, mask=False):
-    hidden_dim = 256
+def _make_detr(backbone_name: str, dilation=False, num_classes=91, mask=False, hidden_dim = 256, num_queries=100):
     backbone = Backbone(backbone_name, train_backbone=True, return_interm_layers=mask, dilation=dilation)
     pos_enc = PositionEmbeddingSine(hidden_dim // 2, normalize=True)
     backbone_with_pos_enc = Joiner(backbone, pos_enc)
     backbone_with_pos_enc.num_channels = backbone.num_channels
     transformer = Transformer(d_model=hidden_dim, return_intermediate_dec=True)
-    detr = DETR(backbone_with_pos_enc, transformer, num_classes=num_classes, num_queries=100)
+    detr = DETR(backbone_with_pos_enc, transformer, num_classes=num_classes, num_queries=num_queries)
     if mask:
         return DETRsegm(detr)
     return detr
 
 
-def detr_resnet50(pretrained=False, num_classes=91, return_postprocessor=False):
+def detr_resnet50(pretrained=False, num_classes=91, return_postprocessor=False, hidden_dim = 256 , num_queries=100):
     """
     DETR R50 with 6 encoder and 6 decoder layers.
 
     Achieves 42/62.4 AP/AP50 on COCO val5k.
     """
-    model = _make_detr("resnet50", dilation=False, num_classes=num_classes)
+    model = _make_detr("resnet50", dilation=False, num_classes=num_classes, hidden_dim=hidden_dim num_queries=num_queries)
     if pretrained:
         checkpoint = torch.hub.load_state_dict_from_url(
             url="https://dl.fbaipublicfiles.com/detr/detr-r50-e632da11.pth", map_location="cpu", check_hash=True
