@@ -45,10 +45,9 @@ class CocoDetection(torchvision.datasets.CocoDetection):
             img = _res["image"].float()
             target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4]
             target["labels"] = torch.tensor(_res["bboxes"], dtype=torch.int64)[:,4]
-            #target["boxes"][:,:2] += target["boxes"][:,2:] / 2
+            
             target["boxes"] = box_xyxy_to_cxcywh(target["boxes"]) / 640.0
             
-            img = img / 255.0
         return img, target
 
 
@@ -139,7 +138,7 @@ def make_coco_transforms(image_set):
     trans_val = A.Compose(
         [
             A.Resize(height=640, width=640),
-            #Normalize(),
+            Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
             ToTensorV2(),
         ])
     
