@@ -28,7 +28,7 @@ def detr_resnet50(pretrained=False, num_classes=91, return_postprocessor=False, 
 
     Achieves 42/62.4 AP/AP50 on COCO val5k.
     """
-    model = _make_detr("resnet50", dilation=False, num_classes=num_classes, hidden_dim=hidden_dim num_queries=num_queries)
+    model = _make_detr("resnet50", dilation=False, num_classes=num_classes, hidden_dim=hidden_dim, num_queries=num_queries)
     if pretrained:
         checkpoint = torch.hub.load_state_dict_from_url(
             url="https://dl.fbaipublicfiles.com/detr/detr-r50-e632da11.pth", map_location="cpu", check_hash=True
