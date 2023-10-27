@@ -17,6 +17,8 @@ import torchvision.transforms as T
 from albumentations.pytorch.transforms import ToTensorV2
 from albumentations.augmentations.transforms import Normalize
 
+from util.box_ops import box_xyxy_to_cxcywh
+
 #import datasets.transforms as T
 
 class CocoDetection(torchvision.datasets.CocoDetection):
@@ -41,9 +43,10 @@ class CocoDetection(torchvision.datasets.CocoDetection):
                 bboxes = np.hstack((tmp_boxes, tmp_labels[ : , np.newaxis])))
             
             img = _res["image"].float()
-            target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4] / 640.0
+            target["boxes"] = torch.tensor(_res["bboxes"], dtype=torch.float32)[:,:4]
             target["labels"] = torch.tensor(_res["bboxes"], dtype=torch.int64)[:,4]
-            target["boxes"][:,:2] += target["boxes"][:,2:] / 2
+            #target["boxes"][:,:2] += target["boxes"][:,2:] / 2
+            target["boxes"] = box_xyxy_to_cxcywh(target["boxes"]) / 640.0
             
             img = img / 255.0
         return img, target
