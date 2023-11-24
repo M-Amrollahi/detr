@@ -144,14 +144,19 @@ def make_coco_transforms(image_set):
     
     trans_train = A.Compose(
         [
-            A.VerticalFlip(p=.5),
-            A.HorizontalFlip(p=.5),
-            A.Sharpen(alpha=(.3,.3),p=.5),
-            A.RandomBrightnessContrast(brightness_limit=0.15,contrast_limit=0.15,p=.5),
-            A.RandomGamma(gamma_limit=(80, 120),p=.5),
-            A.GaussNoise(var_limit=(1,30),  mean=0, p=.5),
-            A.CLAHE(p=.5),
-            #A.ToGray(p=1.0),
+            A.VerticalFlip(p = .5),
+            A.HorizontalFlip(p = .5),
+            A.Sharpen(alpha=(.3, .3),p = .5),
+            A.RandomBrightnessContrast(brightness_limit = 0.15, contrast_limit = 0.15, p = .4),
+            A.ColorJitter(p = 0.7 , saturation=(0.01,3.0) , hue=(-0.3,0.3) , contrast=(1.0,5.0), brightness=(1.,1.5)),
+            A.RandomGamma(gamma_limit = (80, 120),p = .5),
+            A.GaussNoise(var_limit = (1,30),  mean = 0, p = .5),
+            #A.Downscale(scale_min = 0.80, scale_max = 0.99, p = 0.5),
+            #A.PixelDropout(dropout_prob = .05, p = 0.5, drop_value = 127),
+            #A.Rotate(limit = (-30,30), interpolation = 4, border_mode = 2, p = 0.5),
+            A.CLAHE(p = .5),
+            #A.Resize(height = 320, width = 320),
+            #A.RandomCrop(height = 320,width=320, p=1.0)
 
             trans_val
         ],
