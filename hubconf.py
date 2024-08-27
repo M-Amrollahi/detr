@@ -10,20 +10,20 @@ from models.transformer import Transformer
 dependencies = ["torch", "torchvision"]
 
 
-def _make_detr(backbone_name: str, dilation=False, num_classes=91, mask=False):
-    hidden_dim = 256
+def _make_detr(backbone_name: str, dilation=False, num_classes=91, mask=False, hidden_dim = 256, num_queries=100):
+    #hidden_dim = 256
     backbone = Backbone(backbone_name, train_backbone=True, return_interm_layers=mask, dilation=dilation)
     pos_enc = PositionEmbeddingSine(hidden_dim // 2, normalize=True)
     backbone_with_pos_enc = Joiner(backbone, pos_enc)
     backbone_with_pos_enc.num_channels = backbone.num_channels
     transformer = Transformer(d_model=hidden_dim, return_intermediate_dec=True)
-    detr = DETR(backbone_with_pos_enc, transformer, num_classes=num_classes, num_queries=100)
+    detr = DETR(backbone_with_pos_enc, transformer, num_classes=num_classes, num_queries=num_queries)
     if mask:
         return DETRsegm(detr)
     return detr
 
 
-def detr_resnet50(pretrained=False, num_classes=91, return_postprocessor=False):
+def detr_resnet50(pretrained=False, num_classes=91, return_postprocessor=False, hidden_dim = 256 , num_queries=100):
     """
     DETR R50 with 6 encoder and 6 decoder layers.
 
@@ -59,7 +59,7 @@ def detr_resnet50_dc5(pretrained=False, num_classes=91, return_postprocessor=Fal
     return model
 
 
-def detr_resnet101(pretrained=False, num_classes=91, return_postprocessor=False):
+def detr_resnet101(pretrained=False, num_classes=91, return_postprocessor=False, hidden_dim = 256 , num_queries=100):
     """
     DETR-DC5 R101 with 6 encoder and 6 decoder layers.
 
